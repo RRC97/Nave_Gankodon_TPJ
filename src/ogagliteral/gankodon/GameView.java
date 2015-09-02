@@ -13,6 +13,7 @@ import android.graphics.Paint;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 /**
  *
@@ -74,6 +75,88 @@ public class GameView extends View implements Runnable
         
         for(Tile tile : tiles)
             tile.onUpdate();
+        
+        boolean end = false;
+        Symbol focus = Symbol.None;
+        boolean test = false;
+        Symbol repeatColumn = Symbol.None;
+        int timeColumn = 0;
+        for(int i = 0; i < 3; i++)
+        {
+            Symbol repeatRow = Symbol.None;
+            int timeRow = 0;
+        	int idColumn = i * 3;
+        	for(int j = 0; j < 3; j++)
+            {
+            	int idRow = i * 3 + j;
+            	if(tiles[idRow].getSymbol() != Symbol.None)
+            	{
+	            	if(repeatRow == tiles[idRow].getSymbol())
+	            	{
+	            		timeRow++;
+	            	}
+	        		else
+	        		{
+	        			repeatRow = tiles[idRow].getSymbol();
+	        			timeRow = 1;
+	        		}
+            	}
+            }
+        	
+        	if(tiles[idColumn].getSymbol() != Symbol.None)
+        	{
+            	if(repeatColumn == tiles[idColumn].getSymbol())
+            	{
+            		timeColumn++;
+            	}
+        		else
+        		{
+        			repeatColumn = tiles[idColumn].getSymbol();
+        			timeColumn = 1;
+        		}
+        	}
+        	
+        	if(timeColumn >= 3)
+        	{
+    			end = true;
+        		break;
+        	}
+        	if(timeRow >= 3)
+        	{
+    			end = true;
+        		break;
+        	}
+        }
+        
+        /*
+        for(int i = 0; i < tiles.length; i++)
+        {
+        	if(i % 3 == 0)
+        	{
+        		test = true;
+        		focus = tiles[i].getSymbol();
+        	}
+        	
+        	if(test)
+        	{
+        		if(focus == tiles[i].getSymbol())
+        		{
+        			time++;
+        		}
+        		else
+    			{
+        			test = false;
+        			time = 0;
+    			}
+        		if(time >= 3)
+            	{
+        			end = true;
+            		break;
+            	}
+        	}
+        }*/
+        if(end)
+        	Toast.makeText(getContext(), "!!", 0).show();
     }
     @Override
     public boolean onTouchEvent(MotionEvent me)
