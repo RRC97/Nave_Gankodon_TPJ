@@ -25,10 +25,12 @@ public class GameView extends View implements Runnable
     public Tile[] tiles = new Tile[9];
     private float width, height, tileW, tileH;
     private int time;
+    private int score1, score2;
     private Symbol currentSym;
     public GameView(Context context)
     {
         super(context);
+        setKeepScreenOn(true);
         handler = new Handler();
         handler.postDelayed(this, 1);
         
@@ -62,6 +64,17 @@ public class GameView extends View implements Runnable
         canvas.drawLine(10, tileH + 10 + 5, (tileW + 10) * 3, tileH + 10 + 5, paint);
         canvas.drawLine(10, (tileH + 10) * 2 + 5, (tileW + 10) * 3, (tileH + 10) * 2 + 5, paint);
         
+        Paint text = new Paint();
+        float size = (width + height) / 50;
+        text.setColor(Color.WHITE);
+        text.setTextSize(size);
+        canvas.drawText("Player 1 - " + score1, size * 2, height - size * 10, text);
+        canvas.drawText("Player 2 - " + score2, size * 2, height - size * 8, text);
+        paint.setColor(time % 2 == 0 ? Color.WHITE : Color.RED);
+        canvas.drawCircle(size, height - size * 8 - size / 4, size / 2, paint);
+        paint.setColor(time % 2 == 1 ? Color.WHITE : Color.RED);
+        canvas.drawCircle(size, height - size * 10 - size / 4, size / 2, paint);
+        
         for(Tile tile : tiles)
             tile.onDraw(canvas);
     }
@@ -79,13 +92,11 @@ public class GameView extends View implements Runnable
         boolean end = false;
         Symbol focus = Symbol.None;
         boolean test = false;
-        Symbol repeatColumn = Symbol.None;
         int timeColumn = 0;
         for(int i = 0; i < 3; i++)
         {
             Symbol repeatRow = Symbol.None;
             int timeRow = 0;
-        	int idColumn = i * 3;
         	for(int j = 0; j < 3; j++)
             {
             	int idRow = i * 3 + j;
@@ -101,62 +112,110 @@ public class GameView extends View implements Runnable
 	        			timeRow = 1;
 	        		}
             	}
-            }
-        	
-        	if(tiles[idColumn].getSymbol() != Symbol.None)
-        	{
-            	if(repeatColumn == tiles[idColumn].getSymbol())
-            	{
-            		timeColumn++;
+                Symbol repeatColumn = Symbol.None;
+            	for(int k = 0; k < 3; k++)
+                {
+                	int idColumn = k * 3 + j;
+	            	if(tiles[idColumn].getSymbol() != Symbol.None)
+	            	{
+	                	if(repeatColumn == tiles[idColumn].getSymbol())
+	                	{
+	                		timeColumn++;
+	                	}
+	            		else
+	            		{
+	            			repeatColumn = tiles[idColumn].getSymbol();
+	            			timeColumn = 1;
+	            		}
+	            	}
             	}
-        		else
-        		{
-        			repeatColumn = tiles[idColumn].getSymbol();
-        			timeColumn = 1;
-        		}
-        	}
-        	
-        	if(timeColumn >= 3)
-        	{
-    			end = true;
-        		break;
-        	}
+
+            	if(timeColumn >= 3)
+            	{
+        			end = true;
+            		break;
+            	}
+            }
         	if(timeRow >= 3)
         	{
     			end = true;
         		break;
         	}
         }
-        
-        /*
-        for(int i = 0; i < tiles.length; i++)
+        int timeMD = 0;
+        int timeSD = 0;
+        Symbol repeatMD = Symbol.None;
+        Symbol repeatSD = Symbol.None;
+        for(int i = 0; i < 3; i++)
         {
-        	if(i % 3 == 0)
+        	for(int j = 0; j < 3; j++)
+            {
+        		int id = i * 3 + j;
+        		int testMD = i - j;
+        		if(testMD == 0)
+        		{
+        			if(repeatMD != tiles[id].getSymbol()
+        			|| tiles[id].getSymbol() == Symbol.None)
+        			{
+        				repeatMD = tiles[id].getSymbol();
+        				timeMD = 0;
+        			}
+        			timeMD++;
+        		}
+        		int testSD = i + j;
+        		if(testSD == 2)
+        		{
+        			if(repeatSD != tiles[id].getSymbol()
+        			|| tiles[id].getSymbol() == Symbol.None)
+        			{
+        				repeatSD = tiles[id].getSymbol();
+        				timeSD = 0;
+        			}
+        			timeSD++;
+        		}
+            }
+        	if(timeMD >= 3)
         	{
-        		test = true;
-        		focus = tiles[i].getSymbol();
+        		end = true;
+        		break;
+        	}
+        	if(timeSD >= 3)
+        	{
+        		end = true;
+        		break;
         	}
         	
-        	if(test)
+        }
+        
+        boolean old = false;
+        int timeAll = 0;
+        for(Tile tile : tiles)
+        {
+        	if(Symbol.None != tile.getSymbol())
         	{
-        		if(focus == tiles[i].getSymbol())
-        		{
-        			time++;
-        		}
-        		else
-    			{
-        			test = false;
-        			time = 0;
-    			}
-        		if(time >= 3)
-            	{
-        			end = true;
-            		break;
-            	}
-        	}
-        }*/
+        		timeAll++;
+        	}		
+        }
+        if(tiles.length == timeAll)
+        {
+        	end = old = true;
+        }
+        
         if(end)
-        	Toast.makeText(getContext(), "!!", 0).show();
+        {
+        	if(!old)
+        	{
+	            if(time % 2 == 0)
+	            	score2++;
+	            if(time % 2 == 1)
+	            	score1++;
+        	}
+        	for(Tile tile : tiles)
+            {
+        		tile.reset();
+    		}
+        	time = 0;
+        }
     }
     @Override
     public boolean onTouchEvent(MotionEvent me)

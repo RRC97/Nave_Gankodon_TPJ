@@ -26,6 +26,11 @@ public class Tile implements Element
         width = w;
         height = h;
     }
+    
+    public void reset()
+    {
+    	symbol = Symbol.None;
+    }
 
     public void onDraw(Canvas canvas)
     {
